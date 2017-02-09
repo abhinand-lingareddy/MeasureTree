@@ -22,7 +22,7 @@ int length_text(text_t *txt) {
 	if (txt != NULL)
 		return txt->length;
 	else
-		return 0;
+		return -1;
 }
 int current_increment;
 int get_index(node *n) {
