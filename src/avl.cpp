@@ -106,68 +106,75 @@ int get_max(node *n) {
 }
 
 void calculate_submeasure(node* root) {
+	int min_of_right = (root->right ? get_min(root->right) : root->value);
+	int left_min_of_right = (root->right ? get_leftmin(root->right) : root->value);
+	int max_of_right = root->right ? get_max(root->right) : root->value;
+	int max_of_left = root->left ? get_max(root->left) : root->value;
+	int right_max_of_left = root->left ? get_rightmax(root->left) : root->value;
+	int min_of_left = root->left ? get_min(root->left) : root->value;
+
 	if (root->which == 'l') {
 		//case 1
-		if ((get_leftmin(root->right) == get_min(root->right)
-				|| get_leftmin(root->right) == root->value)
-				&& get_rightmax(root->left) == get_max(root->left)) {
+		if ((left_min_of_right == min_of_right
+				|| left_min_of_right == root->value)
+				&& right_max_of_left == max_of_left) {
 			if (search(root->right, root->other, root->value)) {
 				root->submeasure = get_submeasure(root->left)
-						+ get_submeasure(root->right) + get_min(root->right)
+						+ get_submeasure(root->right) + min_of_right
 						- root->value;
 			} else {
 				root->submeasure = get_submeasure(root->left)
-						+ get_max(root->right) - root->value;
+						+ max_of_right - root->value;
 
 			}
-		} else if (get_rightmax(root->left) != get_max(root->left)) {
+		} else if (right_max_of_left != max_of_left) {
 			if (search(root->right, root->other, root->value))
 				root->submeasure = get_submeasure(root->left)
-						+ get_submeasure(root->right) + get_min(root->right)
-						- get_max(root->left);
+						+ get_submeasure(root->right) + min_of_right
+						- max_of_left;
 			else
 				root->submeasure = get_submeasure(root->left)
-						+ get_max(root->right) - get_max(root->left);
-		} else if (get_leftmin(root->right) != get_min(root->right)
-				&& get_leftmin(root->right) != root->value
-				&& get_rightmax(root->left) == get_max(root->left)) {
+						+ max_of_right - max_of_left;
+		} else if (left_min_of_right != min_of_right
+				&& left_min_of_right != root->value
+				&& right_max_of_left == max_of_left) {
 			if (search(root->right, root->other, root->value))
 				root->submeasure = get_submeasure(root->left)
-						+ get_submeasure(root->right) + get_min(root->right)
-						- root->value;
+						+ get_submeasure(root->right) + min_of_right
+						- max_of_left;
 			else
 				root->submeasure = get_submeasure(root->right)
-						+ get_min(root->right) - get_min(root->left);
+						+ min_of_right - min_of_left;
 		}
 	} else {
-		if ((get_rightmax(root->left) == get_max(root->left)
-				|| get_rightmax(root->left) == root->value)
-				&& get_leftmin(root->right) == get_min(root->right)) {
+		if ((right_max_of_left == max_of_left
+				|| right_max_of_left == root->value)
+				&& left_min_of_right == min_of_right) {
 			if (search(root->left, root->other, root->value))
 				root->submeasure = get_submeasure(root->right)
 						+ get_submeasure(root->left) + root->value
-						- get_max(root->left);
+						- max_of_left;
 			else
 				root->submeasure = get_submeasure(root->right) + root->value
-						- get_min(root->left ? root->left : root);
-		} else if (get_leftmin(root->right) != get_min(root->right)) {
+						- min_of_left;
+		} else if (left_min_of_right != min_of_right) {
 			if (search(root->left, root->other, root->value))
 				root->submeasure = get_submeasure(root->right)
-						+ get_submeasure(root->left) + get_min(root->right)
-						- get_max(root->left);
+						+ get_submeasure(root->left) + min_of_right
+						- max_of_left;
 			else
 				root->submeasure = get_submeasure(root->right)
-						+ get_min(root->right) - get_min(root->left);
-		} else if (get_rightmax(root->left) != get_max(root->left)
-				&& get_rightmax(root->left) != root->value
-				&& get_leftmin(root->right) == get_min(root->right)) {
+						+ min_of_right - min_of_left;
+		} else if (right_max_of_left != max_of_left
+				&& right_max_of_left != root->value
+				&& left_min_of_right == min_of_right) {
 			if (search(root->left, root->other, root->value))
 				root->submeasure = get_submeasure(root->right)
-						+ get_submeasure(root->left) + root->value
-						- get_max(root->left);
+						+ get_submeasure(root->left) + min_of_right
+						- max_of_left;
 			else
 				root->submeasure = get_submeasure(root->left)
-						+ get_max(root->right) - get_max(root->left);
+						+ max_of_right - max_of_left;
 		}
 
 	}
@@ -252,7 +259,24 @@ node* rotate_right(node * root) {
 	height(root);
 	return root;
 }
+int find_balance(node *n);
+
+bool reverifydir(node * n,bool pdir){
+	int diff=find_balance(n);
+	if(diff>0){
+		pdir=false;
+	}else if(diff>0){
+		pdir=true;
+	}
+	return pdir;
+}
+
 node* balance(node *temp, bool dir, bool pdir) {
+	if(dir){
+		pdir=reverifydir(temp->right,pdir);
+	}else{
+		pdir=reverifydir(temp->left,pdir);
+	}
 	if (dir == pdir) {
 		if (dir) {
 			return rotate_left(temp);
@@ -522,20 +546,23 @@ void intialize_root(text_t *txt, node * new_node, node *new_node2) {
 	new_node->right = new_node2;
 	height(new_node);
 }
-void insert_line(text_t *txt, int leftindex, int rightindex) {
-	state = 0;
-	node * troot = txt->root;
-	node *new_node = get_node(leftindex, rightindex);
-	node * new_node2 = get_node(rightindex, leftindex);
-	if (new_node != NULL) {
-		if (troot != NULL) {
-			insertboth(troot, leftindex, rightindex, new_node, new_node2);
-			if (state == 1) {
-				txt->root = balance(troot, dir, pdir);
-			}
-		} else
-			intialize_root(txt, new_node, new_node2);
+void insert_interval(text_t *txt, int leftindex, int rightindex) {
+	if(leftindex < rightindex){
+		state = 0;
+		node * troot = txt->root;
+		node *new_node = get_node(leftindex, rightindex);
+		node * new_node2 = get_node(rightindex, leftindex);
+		if (new_node != NULL) {
+			if (troot != NULL) {
+				insertboth(troot, leftindex, rightindex, new_node, new_node2);
+				if (state == 1) {
+					txt->root = balance(troot, dir, pdir);
+				}
+			} else
+				intialize_root(txt, new_node, new_node2);
+		}
 	}
+
 
 }
 
@@ -564,7 +591,8 @@ int inorder(node * t) {
 					printf("min %d ", t->min);
 					printf("max %d ", t->max);
 					printf("leftmin %d ", t->left_min);
-					printf("rightmax %d \n", t->right_max);
+					printf("rightmax %d ", t->right_max);
+					printf("other %d \n", t->other);
 		int hright = inorder(t->right);
 		int h;
 		if (hleft > hright) {
@@ -586,11 +614,19 @@ int inorder(node * t) {
 	}
 }
 
-int main() {
+int query_length(text_t* t){
+	if(t->root==NULL){
+		return 0;
+	}
+	return t->root->submeasure;
+}
+
+int main1() {
 	text_t* t = create_text();
-	insert_line(t, 1, 2);
-	insert_line(t, 5, 10);
-	//insert_line(t,-11,7);
+	insert_interval(t, 1, 2);
+	insert_interval(t, 5, 10);
+	insert_interval(t, 3, 4);
+	insert_interval(t,-11,7);
 
 	printf("%d\n", t->root->height);
 	inorder(t->root);
@@ -600,5 +636,66 @@ int main() {
 	printf("max %d \n", t->root->max);
 	printf("leftmin %d \n", t->root->left_min);
 	printf("rightmax %d \n", t->root->right_max);
+
+}
+
+int main(){
+	text_t* tree_ = create_text();
+
+	 /* insert_interval(tree_, 1, 0);
+	  printf("%d, %d\n", query_length(tree_), 0);*/
+
+	  insert_interval(tree_, 1, 2);
+	  printf("%d, %d\n",query_length(tree_), 1);
+
+	  insert_interval(tree_, 2, 4);
+	  printf("%d, %d\n",query_length(tree_), 3);
+/*
+	  insert_interval(tree_, 6, 10);
+	  printf("%d, %d\n",query_length(tree_), 7);*/
+
+	  insert_interval(tree_, 7, 8);
+	  printf("%d, %d\n",query_length(tree_), 7);
+
+	  insert_interval(tree_, 7, 11);
+	  printf("%d, %d\n",query_length(tree_), 8);
+
+	 /* insert_interval(tree_, -1, 1);
+	  printf("%d, %d\n",query_length(tree_), 10);*/
+/*
+	  insert_interval(tree_, -5, -3);
+	  printf("%d, %d\n",query_length(tree_), 12);
+
+	  insert_interval(tree_, -6, -4);
+	  printf("%d, %d\n",query_length(tree_), 13);*/
+
+	  insert_interval(tree_, -7, 11);
+	  printf("%d, %d\n",query_length(tree_), 18);
+
+	  inorder(tree_->root);
+
+	  printf("done count %d \n", count);
+	  	printf("measure %d \n", tree_->root->submeasure);
+	  	printf("min %d \n", tree_->root->min);
+	  	printf("max %d \n", tree_->root->max);
+	  	printf("leftmin %d \n", tree_->root->left_min);
+	  	printf("rightmax %d \n", tree_->root->right_max);
+
+}
+
+int main3(){
+	text_t* tree_ = create_text();
+	for(int i=0;i<10;i++){
+		insert_interval(tree_, i, i+1);
+	}
+
+	 inorder(tree_->root);
+
+		  printf("done count %d \n", count);
+		  	printf("measure %d \n", tree_->root->submeasure);
+		  	printf("min %d \n", tree_->root->min);
+		  	printf("max %d \n", tree_->root->max);
+		  	printf("leftmin %d \n", tree_->root->left_min);
+		  	printf("rightmax %d \n", tree_->root->right_max);
 
 }
