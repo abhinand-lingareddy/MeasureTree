@@ -591,60 +591,39 @@ node * delete_current_node(node * n) {
 	}
 }
 bool search_delete_node(node* n, int index,int other) {
-	if (get_index(n) < index) {
+	bool s=false;
+	if (get_index(n) <= index) {
 		if (n->right != NULL) {
-			if (get_index(n->right) != index) {
-				bool s=search_delete_node(n->right, index,other);
-				if(s)
-				post_computation_delete(n, true);
-				return s;
-			}else if(n->right->other!=other){
-				bool s=search_delete_node(n->right, index,other);
+			if (get_index(n->right) != index||n->right->other!=other) {
+				s=search_delete_node(n->right, index,other);
 				if(s)
 					post_computation_delete(n, true);
-				else if(n->left!=NULL){
-				s=search_delete_node(n->left, index,other);
-				if(s)
-					post_computation_delete(n, true);
-				}
-				return s;
 			}
 			else {
 				//equal case
 				n->right = delete_current_node(n->right);
 				post_computation_delete(n, true);
-				return true;
+				s=true;
 			}
 		}
 
-	} else {
+	}
+	if(!s && get_index(n) >= index){
 		if (n->left != NULL) {
-			if (get_index(n->left) != index) {
-				bool s=search_delete_node(n->left, index,other);
+			if (get_index(n->left) != index||n->left->other!=other) {
+				s=search_delete_node(n->left, index,other);
 				if(s)
-				post_computation_delete(n, false);
-				return s;
-			}else if(n->left->other!=other){
-
-				bool s=search_delete_node(n->left, index,other);
-				if(s)
-					post_computation_delete(n, true);
-				else if(n->right!=NULL){
-				s=search_delete_node(n->right, index,other);
-				if(s)
-					post_computation_delete(n, true);
-				}
-				return s;
+					post_computation_delete(n, false);
 			}
 			else {
 				//equal
 				n->left = delete_current_node(n->left);
 				post_computation_delete(n, false);
-				return true;
+				s=true;
 			}
 		}
 	}
-	return false;
+	return s;
 }
 node * get_node(int a, int b) {
 	node *temp = (node *) malloc(sizeof(node));
@@ -689,49 +668,40 @@ void insert_interval(m_tree_t *txt, int leftindex, int rightindex) {
 
 }
 
-void delete_int(m_tree_t *txt, int index,int other) {
+bool delete_int(m_tree_t *txt, int index,int other) {
 	state = 0;
+	bool s;
 	node* n = txt->root;
 	if (n != NULL) {
-		if (get_index(n) == index) {
-
-			if(n->other==other){
-				txt->root = delete_current_node(n);
-			}else{
-				bool s=false;
-				if(n->left!=NULL){
-				s=search_delete_node(n->left, index,other);
-				}
-				if(s){
-					post_computation_delete(n, true);
-				}
-				else{
-					s=false;
-				if(n->right!=NULL){
-					s=search_delete_node(n->right, index,other);
-				}
-				if(s){
-					post_computation_delete(n, true);
-
-				}
-				}
-
+		if (get_index(n) == index&& n->other==other) {
+			txt->root = delete_current_node(n);
+			if (state == 1) {
+						txt->root = balance(txt->root, dir, pdir);
 			}
+			return true;
 		}
 		else {
-			search_delete_node(n, index,other);
+			s=search_delete_node(n, index,other);
 		}
 		if (state == 1) {
 			txt->root = balance(txt->root, dir, pdir);
 		}
 	}
+	return s;
 
 }
 
 void delete_interval(m_tree_t *txt, int index, int index2) {
 //states verify
-delete_int(txt,index,index2);
-delete_int(txt,index2,index);
+bool x=delete_int(txt,index,index2);
+bool y=delete_int(txt,index2,index);
+if(!x){
+	printf("failed for %d \n",index);
+}
+
+if(!y){
+	printf("failed for %d \n",index2);
+}
 }
 
 int count = 0;
@@ -773,6 +743,14 @@ int inorder(node * t) {
 		return h;
 	} else {
 		return -1;
+	}
+}
+
+void liteinorder(node *t){
+	if(t!=NULL){
+		count++;
+		liteinorder(t->left);
+		liteinorder(t->right);
 	}
 }
 
@@ -850,39 +828,60 @@ int main2(){
 }
 
 int main4(){
-	m_tree_t* tree_ = create_m_tree();
-
 	  int i;
+	  m_tree_t* tree_ = create_m_tree();
 
-	  for(i=0; i< 4; i++ ){
+
+	  for(i=0; i< 50; i++ ){
 	    insert_interval( tree_, 2*i, 2*i +1 );
 	  }
 	  printf("%d, %d\n",50, query_length(tree_)); // inserted first 50 intervals
 
+
 	  insert_interval( tree_, 0, 100 );
 	  printf("%d, %d\n",100, query_length(tree_)); //inserted another interval
 
-	  for(i=1; i< 4; i++ ){
+	  for(i=1; i< 50; i++ ){
 	    insert_interval( tree_, 199 - (3*i), 200 ); /*[52,200] is longest*/
 	  }
 	  printf("%d, %d\n",200, query_length(tree_)); // inserted further 49 intervals
 
-	  for(i=2; i< 4; i++ ){
+	  liteinorder(tree_->root);
+
+	  	  printf("count 0 %d ,expected %d\n",count,200);
+	  	  count=0;
+
+	  for(i=2; i< 50; i++ ){
+		  if(2*i==52){
+			  delete_interval(tree_, 2*i, 2*i +1 );
+		  }else{
 	    delete_interval(tree_, 2*i, 2*i +1 );
+		  }
 	  }
 	  delete_interval(tree_,0,100);
 	  printf("%d, %d\n",150, query_length(tree_)); //deleted some intervals
 
-	  insert_interval( tree_, 1,2 );
-	  for(i=4; i>0; i-- ){
+	  liteinorder(tree_->root);
+
+	  printf("count 1 %d ,expected %d\n",count,102);
+	  count=0;
+
+	 /* insert_interval( tree_, 1,2 );
+	  for(i=49; i>0; i-- ){
 	    delete_interval( tree_, 199 - (3*i), 200 );
 	  }
 
 	  insert_interval( tree_, 0,2 );
 	  insert_interval( tree_, 1,5 );
-	  printf("%d, %d\n",5, query_length(tree_)); //deleted some intervals,
 
-	  insert_interval( tree_, 0, 100 );
+	  liteinorder(tree_->root);
+
+	  	  printf("count 2 %d ,expected %d\n",count,10);
+	  	  count=0;
+
+	  printf("%d, %d\n",5, query_length(tree_)); //deleted some intervals,*/
+
+	  /*insert_interval( tree_, 0, 100 );
 	  printf("%d, %d\n",100, query_length(tree_)); //inserted another interval
 
 	  for(i=0; i<=3000; i++ ){
@@ -916,9 +915,8 @@ int main4(){
 	  for( i=0; i<100000; i++){
 	    insert_interval(tree_, i, 1000000);
 	  }
-	  printf("%d, %d\n",1000000, query_length(tree_)); //inserted again 100000 intervals}
+	  printf("%d, %d\n",1000000, query_length(tree_)); //inserted again 100000 intervals}*/
 }
-
 int main3(){
 	m_tree_t* tree_ = create_m_tree();
 	for(int i=0;i<10;i++){
