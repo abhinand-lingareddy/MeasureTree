@@ -14,17 +14,27 @@ typedef struct node {
 	node* left;
 	node* right;
 } node;
-typedef struct text_t {
+typedef struct m_tree_t {
 	struct node*root;
-} text_t;
+} m_tree_t;
+
+void copy(node *a,node *b){
+	a->value=b->value;
+	a->other=b->other;
+	a->which=b->which;
+}
 
 bool search(node * temp, int index, int other);
 int get_submeasure(node* root);
 
-text_t* create_text() {
-	text_t *temp = (text_t *) malloc(sizeof(text_t));
+m_tree_t* create_m_tree() {
+	m_tree_t *temp = (m_tree_t *) malloc(sizeof(m_tree_t));
 	temp->root = NULL;
 	return temp;
+}
+
+void destroy_m_tree(m_tree_t *tree){
+	tree->root = NULL;
 }
 void calculate_min(node* root) {
 	if (!root->left) {
@@ -105,112 +115,10 @@ int get_max(node *n) {
 	}
 }
 
-int cal_submeasure(node *n){
-	if(n->which == 'l'){
-		if(n->left != NULL && n->right != NULL){
-			if((n->right->left_min == n->right->min || n->right->left_min == n->value) && n->left->right_max == n->left->max){
-				if(n->other <= n->max)
-					return n->left->submeasure + n->right->submeasure + n->right->min - n->value;
-				else
-					return n->left->submeasure + n->right->max - n->value;
-			}
-			else if(n->left->right_max != n->left->max){
-				if(n->right->left_min < n->right->min){
-					return n->right->max - n->left->min;
-				}
-				if(n->other <= n->max)
-					return n->left->submeasure + n->right->submeasure + n->right->min - n->left->max;
-				else
-					return n->left->submeasure + n->right->max - n->left->max;
-			}
-			else if(n->right->left_min != n->right->min && (n->right->left_min != n->value)){
-				if(n->other <= n->max)
-					return n->left->submeasure + n->right->submeasure + n->right->min - n->left->max;
-				else
-					return n->right->submeasure + n->right->min - n->left->min;
-			}
-		}
-		else if(n->right==NULL && n->left==NULL){
-			return 0;
-		}
-		else if(n->right!=NULL){
-			if((n->right->left_min == n->right->min || n->right->left_min==n->value)){
-				if(n->other <= n->max)
-					return n->right->submeasure + n->right->min - n->value;
-				else
-					return n->right->max - n->value;
-			}
-			else if(n->right->left_min != n->right->min && (n->right->left_min!=n->value)){
-				if(n->other <= n->max)
-					return n->right->submeasure + n->right->min - n->value;
-				else
-					return n->right->submeasure + n->right->min - n->value;
-			}
-		}
-		else if(n->left!=NULL){
-			if(n->left->right_max == n->left->max){
-					return n->left->submeasure;
-			}
-			else if(n->left->right_max != n->left->max){
-					return n->left->submeasure + n->value - n->left->max;
-			}
-		}
-	}
-	else{
-		if(n->left!=NULL && n->right!=NULL){
-			if((n->left->right_max == n->left->max || n->left->right_max == n->value) && n->right->left_min == n->right->min){
-				if(n->other >= n->min)
-					return n->right->submeasure + n->left->submeasure + n->value - n->left->max;
-				else
-					return n->right->submeasure + n->value - n->left->min;
-			}
-			else if(n->right->left_min != n->right->min){
-				if(n->left->right_max > n->left->max){
-					return n->right->max - n->left->min;
-				}
-				if(n->other >= n->min)
-					return n->right->submeasure + n->left->submeasure + n->right->min - n->left->max;
-				else
-					return n->right->submeasure + n->right->min - n->left->min;
-			}
-			else if(n->left->right_max != n->left->max && (n->left->right_max != n->value)){
-				if(n->other >= n->min)
-					return n->right->submeasure + n->left->submeasure + n->right->min - n->left->max;
-				else
-					return n->left->submeasure + n->right->max - n->left->max;
-			}
-		}
-		else if(n->right==NULL && n->left==NULL){
-			return 0;
-		}
-		else if(n->left!=NULL){
-			if((n->left->right_max == n->left->max || n->left->right_max == n->value)){
-				if(n->other >= n->min)
-					return n->left->submeasure + n->value - n->left->max;
-				else
-					return n->value - n->left->min;
-			}
-			else if(n->left->right_max != n->left->max && (n->left->right_max !=n->value)){
-				if(n->other >= n->min)
-					return n->left->submeasure + n->value - n->left->max;
-				else
-					return n->left->submeasure + n->value - n->left->max;
-			}
-		}
-		else if(n->right!=NULL){
-			if(n->right->left_min == n->right->min){
-					return n->right->submeasure;
-			}
-			else if(n->right->left_min != n->right->min){
-					return n->right->submeasure + n->right->min - n->value;
-			}
-		}
-	}
-	return 0;
-}
 
 
-void calculate_submeasure1(node* root) {
+
+void calculate_submeasure(node* root) {
     int min_of_right = (root->right ? get_min(root->right) : root->value);
     int left_min_of_right = (root->right ? get_left_min(root->right) : root->value);
     int max_of_right = root->right ? get_max(root->right) : root->value;
@@ -361,99 +269,6 @@ void calculate_submeasure1(node* root) {
     }
 }
 
-void calculate_submeasure(node* root) {
-	int min_of_right = (root->right ? get_min(root->right) : root->value);
-	int left_min_of_right = (root->right ? get_left_min(root->right) : root->value);
-	int max_of_right = root->right ? get_max(root->right) : root->value;
-	int max_of_left = root->left ? get_max(root->left) : root->value;
-	int right_max_of_left = root->left ? get_right_max(root->left) : root->value;
-	int min_of_left = root->left ? get_min(root->left) : root->value;
-
-	if (root->which == 'l') {
-		//case 1
-		if ((left_min_of_right == min_of_right
-				|| left_min_of_right == root->value)
-				&& right_max_of_left == max_of_left) {
-			if (search(root->right, root->other, root->value)) {
-				root->submeasure = get_submeasure(root->left)
-						+ get_submeasure(root->right) + min_of_right
-						- root->value;
-			} else {
-				root->submeasure = get_submeasure(root->left)
-						+ max_of_right - root->value;
-
-			}
-		} else if (right_max_of_left != max_of_left) {
-			if(left_min_of_right < min_of_right){
-				root->submeasure = max_of_right - min_of_left;
-			}
-			if (search(root->right, root->other, root->value))
-				root->submeasure = get_submeasure(root->left)
-						+ get_submeasure(root->right) + min_of_right
-						- max_of_left;
-			else
-				root->submeasure = get_submeasure(root->left)
-						+ max_of_right - max_of_left;
-		} else if (left_min_of_right != min_of_right
-				&& left_min_of_right != root->value
-				&& right_max_of_left == max_of_left) {
-			if (search(root->right, root->other, root->value)){
-//				root->submeasure = get_submeasure(root->right) + min_of_right - min_of_left;
-
-				root->submeasure = get_submeasure(root->left)
-						+ get_submeasure(root->right) + min_of_right
-						- max_of_left;
-			}
-			else{
-//				root->submeasure = max_of_right - min_of_left;
-
-				root->submeasure = get_submeasure(root->right)
-						+ min_of_right - min_of_left;
-			}
-		}
-	} else {
-		if ((right_max_of_left == max_of_left
-				|| right_max_of_left == root->value)
-				&& left_min_of_right == min_of_right) {
-			if (search(root->left, root->other, root->value))
-				root->submeasure = get_submeasure(root->right)
-						+ get_submeasure(root->left) + root->value
-						- max_of_left;
-			else
-				root->submeasure = get_submeasure(root->right) + root->value
-						- min_of_left;
-		} else if (left_min_of_right != min_of_right) {
-			if(right_max_of_left > max_of_left){
-				root->submeasure = max_of_right - min_of_left;
-			}
-			if (search(root->left, root->other, root->value))
-				root->submeasure = get_submeasure(root->right)
-						+ get_submeasure(root->left) + min_of_right
-						- max_of_left;
-			else
-				root->submeasure = get_submeasure(root->right)
-						+ min_of_right - min_of_left;
-		} else if (right_max_of_left != max_of_left
-				&& right_max_of_left != root->value
-				&& left_min_of_right == min_of_right) {
-			if (search(root->left, root->other, root->value)){
-//				root->submeasure = get_submeasure(root->left) + max_of_right - max_of_left;
-
-				root->submeasure = get_submeasure(root->right)
-						+ get_submeasure(root->left) + min_of_right
-						- max_of_left;
-			}
-			else{
-//				root->submeasure = get_submeasure(root->right) + min_of_right - min_of_left;
-//				root->submeasure = max_of_right - min_of_left;
-
-				root->submeasure = get_submeasure(root->left)
-						+ max_of_right - max_of_left;
-			}
-		}
-
-	}
-}
 
 int get_submeasure(node* root) {
 	if (!root) {
@@ -506,7 +321,7 @@ int height(node *n) {
 	calculate_left_min(n);
 	calculate_right_max(n);
 //	n->submeasure = cal_submeasure(n);// calculate_submeasure(n);
-	calculate_submeasure1(n);
+	calculate_submeasure(n);
 	return n->height;
 }
 
@@ -742,9 +557,9 @@ void delete_inorder(node *n, node *c) {
 		delete_inorder(n, c->left);
 		post_computation_delete(c, false);
 	} else {
-		//copy data
-		n->value = c->left->value;
+		copy(n,c->left);
 		c->left = delete_current_node(c->left);
+		post_computation_delete(c, false);//rethink
 		//n->key=n->key+1;
 		//free c
 	}
@@ -768,37 +583,68 @@ node * delete_current_node(node * n) {
 		if (n->right->left != NULL) {
 			delete_inorder(n, n->right);
 		} else {
-			//copy data of deltion node
-			n->value = n->right->value;
+			copy(n,n->right);
 			n->right = delete_current_node(n->right);
 		}
 		post_computation_delete(n, true);
 		return n;
 	}
 }
-void search_delete_node(node* n, int index) {
+bool search_delete_node(node* n, int index,int other) {
 	if (get_index(n) < index) {
 		if (n->right != NULL) {
 			if (get_index(n->right) != index) {
-				search_delete_node(n->right, index);
+				bool s=search_delete_node(n->right, index,other);
+				if(s)
 				post_computation_delete(n, true);
-			} else {
+				return s;
+			}else if(n->right->other!=other){
+				bool s=search_delete_node(n->right, index,other);
+				if(s)
+					post_computation_delete(n, true);
+				else if(n->left!=NULL){
+				s=search_delete_node(n->left, index,other);
+				if(s)
+					post_computation_delete(n, true);
+				}
+				return s;
+			}
+			else {
+				//equal case
 				n->right = delete_current_node(n->right);
 				post_computation_delete(n, true);
+				return true;
 			}
 		}
+
 	} else {
 		if (n->left != NULL) {
 			if (get_index(n->left) != index) {
-				search_delete_node(n->left, index);
+				bool s=search_delete_node(n->left, index,other);
+				if(s)
 				post_computation_delete(n, false);
-			} else {
+				return s;
+			}else if(n->left->other!=other){
+
+				bool s=search_delete_node(n->left, index,other);
+				if(s)
+					post_computation_delete(n, true);
+				else if(n->right!=NULL){
+				s=search_delete_node(n->right, index,other);
+				if(s)
+					post_computation_delete(n, true);
+				}
+				return s;
+			}
+			else {
+				//equal
 				n->left = delete_current_node(n->left);
 				post_computation_delete(n, false);
+				return true;
 			}
 		}
 	}
-
+	return false;
 }
 node * get_node(int a, int b) {
 	node *temp = (node *) malloc(sizeof(node));
@@ -817,13 +663,13 @@ node * get_node(int a, int b) {
 	return temp;
 }
 
-void intialize_root(text_t *txt, node * new_node, node *new_node2) {
+void intialize_root(m_tree_t *txt, node * new_node, node *new_node2) {
 	//calculate other parameters
 	txt->root = new_node;
 	new_node->right = new_node2;
 	height(new_node);
 }
-void insert_interval(text_t *txt, int leftindex, int rightindex) {
+void insert_interval(m_tree_t *txt, int leftindex, int rightindex) {
 	if(leftindex < rightindex){
 		state = 0;
 		node * troot = txt->root;
@@ -843,14 +689,37 @@ void insert_interval(text_t *txt, int leftindex, int rightindex) {
 
 }
 
-void delete_line(text_t *txt, int index) {
+void delete_int(m_tree_t *txt, int index,int other) {
 	state = 0;
 	node* n = txt->root;
 	if (n != NULL) {
 		if (get_index(n) == index) {
-			txt->root = delete_current_node(n);
-		} else {
-			search_delete_node(n, index);
+
+			if(n->other==other){
+				txt->root = delete_current_node(n);
+			}else{
+				bool s=false;
+				if(n->left!=NULL){
+				s=search_delete_node(n->left, index,other);
+				}
+				if(s){
+					post_computation_delete(n, true);
+				}
+				else{
+					s=false;
+				if(n->right!=NULL){
+					s=search_delete_node(n->right, index,other);
+				}
+				if(s){
+					post_computation_delete(n, true);
+
+				}
+				}
+
+			}
+		}
+		else {
+			search_delete_node(n, index,other);
 		}
 		if (state == 1) {
 			txt->root = balance(txt->root, dir, pdir);
@@ -858,6 +727,13 @@ void delete_line(text_t *txt, int index) {
 	}
 
 }
+
+void delete_interval(m_tree_t *txt, int index, int index2) {
+//states verify
+delete_int(txt,index,index2);
+delete_int(txt,index2,index);
+}
+
 int count = 0;
 void postorder(node *t){
 	if(t!=NULL){
@@ -865,7 +741,7 @@ void postorder(node *t){
 		postorder(t->right);
 //		t->submeasure= cal_submeasure(t);
 //		calculate_submeasure(t);
-		calculate_submeasure1(t);
+		calculate_submeasure(t);
 	}
 }
 int inorder(node * t) {
@@ -900,7 +776,7 @@ int inorder(node * t) {
 	}
 }
 
-int query_length(text_t* t){
+int query_length(m_tree_t* t){
 	if(t->root==NULL){
 		return 0;
 	}
@@ -908,7 +784,7 @@ int query_length(text_t* t){
 }
 
 int main1() {
-	text_t* t = create_text();
+	m_tree_t* t = create_m_tree();
 	insert_interval(t, 1, 2);
 	insert_interval(t, 5, 10);
 	insert_interval(t, 3, 4);
@@ -925,11 +801,11 @@ int main1() {
 
 }
 
-int main(){
-	text_t* tree_ = create_text();
+int main2(){
+	m_tree_t* tree_ = create_m_tree();
 
-	 /* insert_interval(tree_, 1, 0);
-	  printf("%d, %d\n", query_length(tree_), 0);*/
+	  insert_interval(tree_, 1, 0);
+	  printf("%d, %d\n", query_length(tree_), 0);
 
 	  insert_interval(tree_, 1, 2);
 	  printf("%d, %d\n",query_length(tree_), 1);
@@ -958,6 +834,9 @@ int main(){
 	  insert_interval(tree_, -7, 11);
 	  printf("%d, %d\n",query_length(tree_), 18);
 
+	  delete_interval(tree_, -7, 11);
+	  	  printf("%d, %d\n",query_length(tree_), 18);
+
 //	  	postorder(tree_->root);
 	  inorder(tree_->root);
 
@@ -970,8 +849,78 @@ int main(){
 
 }
 
+int main4(){
+	m_tree_t* tree_ = create_m_tree();
+
+	  int i;
+
+	  for(i=0; i< 4; i++ ){
+	    insert_interval( tree_, 2*i, 2*i +1 );
+	  }
+	  printf("%d, %d\n",50, query_length(tree_)); // inserted first 50 intervals
+
+	  insert_interval( tree_, 0, 100 );
+	  printf("%d, %d\n",100, query_length(tree_)); //inserted another interval
+
+	  for(i=1; i< 4; i++ ){
+	    insert_interval( tree_, 199 - (3*i), 200 ); /*[52,200] is longest*/
+	  }
+	  printf("%d, %d\n",200, query_length(tree_)); // inserted further 49 intervals
+
+	  for(i=2; i< 4; i++ ){
+	    delete_interval(tree_, 2*i, 2*i +1 );
+	  }
+	  delete_interval(tree_,0,100);
+	  printf("%d, %d\n",150, query_length(tree_)); //deleted some intervals
+
+	  insert_interval( tree_, 1,2 );
+	  for(i=4; i>0; i-- ){
+	    delete_interval( tree_, 199 - (3*i), 200 );
+	  }
+
+	  insert_interval( tree_, 0,2 );
+	  insert_interval( tree_, 1,5 );
+	  printf("%d, %d\n",5, query_length(tree_)); //deleted some intervals,
+
+	  insert_interval( tree_, 0, 100 );
+	  printf("%d, %d\n",100, query_length(tree_)); //inserted another interval
+
+	  for(i=0; i<=3000; i++ ){
+	      insert_interval( tree_, 2000+i, 3000+i );
+	  }
+	  printf("%d, %d\n",4100, query_length(tree_)); //inserted 3000 intervals
+
+	  for(i=0; i<=3000; i++ ){
+	    delete_interval( tree_, 2000+i, 3000+i );
+	  }
+	  printf("%d, %d\n",100, query_length(tree_)); //deleted 3000 intervals
+
+	  for(i=0; i<=100; i++ ){
+	    insert_interval( tree_, 10*i, 10*i+100 );
+	  }
+	  printf("%d, %d\n",1100, query_length(tree_)); //inserted another 100 intervals
+
+	  delete_interval( tree_, 1,2 );
+	  delete_interval( tree_, 0,2 );
+	  delete_interval( tree_, 2,3 );
+	  delete_interval( tree_, 0,1 );
+	  delete_interval( tree_, 1,5 );
+	  printf("%d, %d\n",1100, query_length(tree_)); //deleted some intervals
+
+	  for(i=0; i<= 100; i++ ){
+	    delete_interval(tree_, 10*i, 10*i+100);
+	  }
+	  delete_interval(tree_,0,100);
+	  printf("%d, %d\n",0, query_length(tree_)); //deleted last interval
+
+	  for( i=0; i<100000; i++){
+	    insert_interval(tree_, i, 1000000);
+	  }
+	  printf("%d, %d\n",1000000, query_length(tree_)); //inserted again 100000 intervals}
+}
+
 int main3(){
-	text_t* tree_ = create_text();
+	m_tree_t* tree_ = create_m_tree();
 	for(int i=0;i<10;i++){
 		insert_interval(tree_, i, i+1);
 	}
