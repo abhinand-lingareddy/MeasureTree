@@ -129,6 +129,7 @@ void calculate_submeasure(node* root) {
     if (root->which == 'l') {
 
         if(root->left && root->right){
+        	//case 1
             if ((left_min_of_right == min_of_right
                     || left_min_of_right == root->value)
                     && right_max_of_left == max_of_left) {
@@ -141,6 +142,7 @@ void calculate_submeasure(node* root) {
                             + max_of_right - root->value;
 
                 }
+                //case 2
             } else if (right_max_of_left != max_of_left) {
 				if(left_min_of_right < min_of_right && min_of_left == left_min_of_right){ // && left_min_of_right == root->value){
 //					root->submeasure = get_submeasure(root->left) + get_submeasure(root->right) + min_of_right - max_of_left;
@@ -155,6 +157,7 @@ void calculate_submeasure(node* root) {
 						root->submeasure = get_submeasure(root->left)
 								+ max_of_right - max_of_left;
 				}
+				//case 3
             } else if (left_min_of_right != min_of_right
                     && left_min_of_right != root->value
                     && right_max_of_left == max_of_left) {
@@ -422,7 +425,7 @@ int find_balance(node *n) {
 	return diff;
 }
 
-//state 2 case handle
+
 void post_insert_computation(node *temp, bool cdir,bool cal) {
 	if (state == 0) {
 		if (!check_balance(temp)) {
@@ -559,7 +562,7 @@ void delete_inorder(node *n, node *c) {
 	} else {
 		copy(n,c->left);
 		c->left = delete_current_node(c->left);
-		post_computation_delete(c, false);//rethink
+		post_computation_delete(c, false);
 		//n->key=n->key+1;
 		//free c
 	}
@@ -693,15 +696,8 @@ bool delete_int(m_tree_t *txt, int index,int other) {
 
 void delete_interval(m_tree_t *txt, int index, int index2) {
 //states verify
-bool x=delete_int(txt,index,index2);
-bool y=delete_int(txt,index2,index);
-if(!x){
-	printf("failed for %d \n",index);
-}
-
-if(!y){
-	printf("failed for %d \n",index2);
-}
+delete_int(txt,index,index2);
+delete_int(txt,index2,index);
 }
 
 int count = 0;
@@ -825,6 +821,51 @@ int main2(){
 	printf("left_min %d \n", tree_->root->left_min);
 	printf("right_max %d \n", tree_->root->right_max);
 
+}
+
+int main6(){
+	 m_tree_t* tree_ = create_m_tree();
+
+	  delete_interval(tree_, 1, 2);
+	  printf("%d, %d\n",query_length(tree_), 0);
+
+	  insert_interval(tree_, 1, 2);
+	  delete_interval(tree_, 1, 3);
+	  printf("%d, %d\n",query_length(tree_), 1);
+	  delete_interval(tree_, 1, 2);
+	  printf("%d, %d\n",query_length(tree_), 0);
+
+	  insert_interval(tree_, 1, 2);
+	  insert_interval(tree_, 2, 4);
+	  delete_interval(tree_, 1, 2);
+	  printf("%d, %d\n",query_length(tree_), 2);
+
+	  insert_interval(tree_, 5, 9);
+	  delete_interval(tree_, 2, 4);
+	  printf("%d, %d\n",query_length(tree_), 4);
+
+	  insert_interval(tree_, 6, 8);
+	  delete_interval(tree_, 5, 9);
+	  printf("%d, %d\n",query_length(tree_), 2);
+
+	  insert_interval(tree_, 7, 10);
+	  delete_interval(tree_, 6, 8);
+	  printf("%d, %d\n",query_length(tree_), 3);
+
+	  insert_interval(tree_, 6, 8);
+	  delete_interval(tree_, 7, 10);
+	  printf("%d, %d\n",query_length(tree_), 2);
+
+	  insert_interval(tree_, 2, 10);
+	  delete_interval(tree_, 6, 8);
+	  printf("%d, %d\n",query_length(tree_), 8);
+
+	  insert_interval(tree_, -1, 2);
+	  delete_interval(tree_, 2, 10);
+	  printf("%d, %d\n",query_length(tree_), 3);
+
+	  delete_interval(tree_, -1, 2);
+	  printf("%d, %d\n",query_length(tree_), 0);
 }
 
 int main4(){
